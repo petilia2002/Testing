@@ -2,21 +2,21 @@ package calculator;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.stream.Stream;
-
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Stream;
+
+import java.io.IOException;
+import java.util.stream.Collectors;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,16 +47,13 @@ class CalculatorTest {
                     String.format("%s + %s in %s should equal %s", a, b, system, expected));
         }
 
-        @ParameterizedTest()
-        @CsvFileSource(resources = "/test_data.csv", numLinesToSkip = 1)
+        @ParameterizedTest(name = "[{index}] {0} + {1} в {2} системе = {3}")
+        @CsvFileSource(resources = "/add_tests.csv", numLinesToSkip = 1)
         @DisplayName("Addition with CSV file source")
-        void testAdditionFromCsvFile(String operation, String a, String b,
-                                     String systemStr, String expected) {
-            if ("ADD".equals(operation)) {
-                Calculator.NumberSystem system = Calculator.NumberSystem.valueOf(systemStr);
-                String result = calculator.add(a, b, system);
-                assertEquals(expected, result);
-            }
+        void testAdditionFromCsvFile(String a, String b, String systemStr, String expected) {
+            Calculator.NumberSystem system = Calculator.NumberSystem.valueOf(systemStr);
+            String result = calculator.add(a, b, system);
+            assertEquals(expected, result);
         }
 
         @ParameterizedTest(name = "[{index}] {0} + {1} в {2} = {3}")
@@ -74,7 +71,7 @@ class CalculatorTest {
     @DisplayName("Subtraction Tests")
     class SubtractionTests {
 
-        @ParameterizedTest
+        @ParameterizedTest(name = "[{index}] {0} - {1} в {2} системе = {3}")
         @CsvSource({
                 "1010, 110, BINARY, 100",
                 "17, 5, OCTAL, 12",
@@ -86,13 +83,32 @@ class CalculatorTest {
             String result = calculator.subtract(a, b, system);
             assertEquals(expected, result);
         }
+
+        @ParameterizedTest(name = "[{index}] {0} - {1} в {2} системе = {3}")
+        @CsvFileSource(resources = "/sub_tests.csv", numLinesToSkip = 1)
+        @DisplayName("Subtraction with CSV file source")
+        void testSubtractionFromCsvFile(String a, String b, String systemStr, String expected) {
+            Calculator.NumberSystem system = Calculator.NumberSystem.valueOf(systemStr);
+            String result = calculator.subtract(a, b, system);
+            assertEquals(expected, result);
+        }
+
+        @ParameterizedTest(name = "[{index}] {0} - {1} в {2} = {3}")
+        @MethodSource("calculator.TestDataProviders#subtractionTestData")
+        @DisplayName("Subtraction with External Method Source")
+        void testSubtractionWithExternalMethodSource(String a, String b,
+                                                  Calculator.NumberSystem system,
+                                                  String expected) {
+            String result = calculator.subtract(a, b, system);
+            assertEquals(expected, result);
+        }
     }
 
     @Nested
     @DisplayName("Multiplication Tests")
     class MultiplicationTests {
 
-        @ParameterizedTest
+        @ParameterizedTest(name = "[{index}] {0} x {1} в {2} системе = {3}")
         @CsvSource({
                 "1010, 11, BINARY, 11110",
                 "7, 5, OCTAL, 43",
@@ -104,13 +120,32 @@ class CalculatorTest {
             String result = calculator.multiply(a, b, system);
             assertEquals(expected, result);
         }
+
+        @ParameterizedTest(name = "[{index}] {0} x {1} в {2} системе = {3}")
+        @CsvFileSource(resources = "/mul_tests.csv", numLinesToSkip = 1)
+        @DisplayName("Multiplication with CSV file source")
+        void testMultiplicationFromCsvFile(String a, String b, String systemStr, String expected) {
+            Calculator.NumberSystem system = Calculator.NumberSystem.valueOf(systemStr);
+            String result = calculator.multiply(a, b, system);
+            assertEquals(expected, result);
+        }
+
+        @ParameterizedTest(name = "[{index}] {0} x {1} в {2} = {3}")
+        @MethodSource("calculator.TestDataProviders#multiplicationTestData")
+        @DisplayName("Multiplication with External Method Source")
+        void testMultiplicationWithExternalMethodSource(String a, String b,
+                                                     Calculator.NumberSystem system,
+                                                     String expected) {
+            String result = calculator.multiply(a, b, system);
+            assertEquals(expected, result);
+        }
     }
 
     @Nested
     @DisplayName("Division Tests")
     class DivisionTests {
 
-        @ParameterizedTest
+        @ParameterizedTest(name = "[{index}] {0} / {1} в {2} системе = {3}")
         @CsvSource({
                 "1010, 10, BINARY, 101",
                 "24, 3, OCTAL, 6",
@@ -131,48 +166,72 @@ class CalculatorTest {
                 calculator.divide("10", "0", system);
             });
         }
+
+        @ParameterizedTest(name = "[{index}] {0} / {1} в {2} системе = {3}")
+        @CsvFileSource(resources = "/div_tests.csv", numLinesToSkip = 1)
+        @DisplayName("Division with CSV file source")
+        void testDivisionFromCsvFile(String a, String b, String systemStr, String expected) {
+            Calculator.NumberSystem system = Calculator.NumberSystem.valueOf(systemStr);
+            String result = calculator.divide(a, b, system);
+            assertEquals(expected, result);
+        }
+
+        @ParameterizedTest(name = "[{index}] {0} / {1} в {2} = {3}")
+        @MethodSource("calculator.TestDataProviders#divisionTestData")
+        @DisplayName("Division with External Method Source")
+        void testDivisionWithExternalMethodSource(String a, String b,
+                                                        Calculator.NumberSystem system,
+                                                        String expected) {
+            String result = calculator.divide(a, b, system);
+            assertEquals(expected, result);
+        }
     }
 
     @Nested
     @DisplayName("Dynamic Tests from CSV")
     class DynamicTests {
-
         @TestFactory
         @DisplayName("Dynamic tests for all operations")
-        Stream<DynamicTest> dynamicTestsFromCsvFile() {
-            List<String[]> testData = Arrays.asList(
-                    new String[]{"ADD", "1010", "110", "BINARY", "10000", "Binary Addition"},
-                    new String[]{"ADD", "17", "5", "OCTAL", "24", "Octal Addition"},
-                    new String[]{"ADD", "15", "7", "DECIMAL", "22", "Decimal Addition"},
-                    new String[]{"ADD", "A", "5", "HEXADECIMAL", "F", "Hexadecimal Addition"},
-                    new String[]{"SUBTRACT", "1010", "110", "BINARY", "100", "Binary Subtraction"},
-                    new String[]{"SUBTRACT", "17", "5", "OCTAL", "12", "Octal Subtraction"}
-            );
+        Stream<DynamicTest> dynamicTestsFromCsvFile() throws IOException {
+            try (InputStream in = getClass().getResourceAsStream("/test_data.csv")) {
+                assert in != null;
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
-            return testData.stream()
-                    .map(data -> DynamicTest.dynamicTest(data[5], () -> {
-                        Calculator.NumberSystem system = Calculator.NumberSystem.valueOf(data[3]);
-                        String result;
+                    List<String[]> testData = reader.lines()
+                            .skip(1)
+                            .map(line -> line.split(","))
+                            .collect(Collectors.toList());
 
-                        switch (data[0]) {
-                            case "ADD":
-                                result = calculator.add(data[1], data[2], system);
-                                break;
-                            case "SUBTRACT":
-                                result = calculator.subtract(data[1], data[2], system);
-                                break;
-                            case "MULTIPLY":
-                                result = calculator.multiply(data[1], data[2], system);
-                                break;
-                            case "DIVIDE":
-                                result = calculator.divide(data[1], data[2], system);
-                                break;
-                            default:
-                                throw new IllegalArgumentException("Unknown operation: " + data[0]);
-                        }
-
-                        assertEquals(data[4], result);
-                    }));
+                    return testData.stream()
+                            .map(data -> DynamicTest.dynamicTest(
+                                    String.format("%s: %s %s %s (в %s) = %s",
+                                            data[0], data[1], getSymbol(data[0]), data[2], data[3], data[4]),
+                                    () -> {
+                                        Calculator.NumberSystem system = Calculator.NumberSystem.valueOf(data[3]);
+                                        String result;
+                                        switch (data[0]) {
+                                            case "ADD": result = calculator.add(data[1], data[2], system); break;
+                                            case "SUBTRACT": result = calculator.subtract(data[1], data[2], system); break;
+                                            case "MULTIPLY": result = calculator.multiply(data[1], data[2], system); break;
+                                            case "DIVIDE": result = calculator.divide(data[1], data[2], system); break;
+                                            default: throw new IllegalArgumentException("Unknown operation: " + data[0]);
+                                        }
+                                        assertEquals(data[4], result);
+                                    }
+                            ));
+                }
+            }
         }
+
+        private String getSymbol(String operation) {
+            switch (operation) {
+                case "ADD": return "+";
+                case "SUBTRACT": return "-";
+                case "MULTIPLY": return "*";
+                case "DIVIDE": return "/";
+                default: return "?";
+            }
+        }
+
     }
 }

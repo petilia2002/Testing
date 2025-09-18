@@ -24,6 +24,10 @@ public class CalculatorApp {
                     continue;
                 }
 
+                if(choice == 5) {
+                    continue;
+                }
+
                 Calculator.NumberSystem system = selectNumberSystem();
                 String a = getStringInput("Введите первое число: ");
                 String b = getStringInput("Введите второе число: ");
